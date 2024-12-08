@@ -6,11 +6,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+// use App\Models\Post;
+// use App\Models\Community;
+// use App\Models\Comment;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -18,7 +21,8 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'username',
+        'profile_picture',
         'email',
         'password',
     ];
@@ -34,15 +38,46 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * The attributes that should be cast.
      *
-     * @return array<string, string>
+     * @var array<string, string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+    // User's own posts
+    public function posts()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasMany(Post::class);
+    }
+
+    // Communities the user has joined
+    public function communities()
+    {
+        return $this->belongsToMany(Community::class, 'community_user');
+    }
+
+    // Communities the user administers
+    public function administratedCommunities()
+    {
+        return $this->belongsToMany(Community::class, 'community_administrator');
+    }
+
+    // Comments made by the user
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    // Posts the user has upvoted
+    public function upvotedPosts()
+    {
+        return $this->belongsToMany(Post::class, 'post_upvote');
+    }
+
+    // Communities the user owns
+    public function ownedCommunities()
+    {
+        return $this->hasMany(Community::class, 'owner_id');
     }
 }
